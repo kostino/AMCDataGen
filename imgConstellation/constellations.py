@@ -136,10 +136,6 @@ class QAM(Constellation):
         self.symbol_power = symbol_power
         # Constellation offset
         self.angle_offset = angle_offset
-        # # Symbols angles
-        # self.angles = np.arange(symbols_num) * 2 * np.pi / symbols_num + angle_offset
-        # # Symbols
-        # self.symbols = symbol_power * np.exp(-1j * self.angles)
         n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
         a = np.asarray([x ^ (x >> 1) for x in n])  # convert linear addresses to Gray code
         D = np.sqrt(symbols_num).astype(int)  # Dimension of K-Map - N x N matrix
@@ -165,10 +161,11 @@ class PAM(Constellation):
         self.symbol_power = symbol_power
         # Constellation offset
         self.angle_offset = angle_offset
-
+        egPAM = 3 * symbol_power / (symbols_num - 1)
+        d_min = 2 * np.sqrt(egPAM)
         n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
         D = symbols_num
-        Ax = 2 * n + 1 - D  # PAM Amplitudes 2d+1-D - real axis
+        Ax = d_min * n + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - real axis
         Ay = 0  # PAM Amplitudes 0 - imag axis
         # apply angle offset
         self.symbols = (Ax + 1j * Ay) * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
