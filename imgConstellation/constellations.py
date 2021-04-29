@@ -135,11 +135,11 @@ class QAM(Constellation):
         # Symbol Power
         self.symbol_power = symbol_power
         m = np.sqrt(symbols_num).astype(int)
-        sum_term = (m-2) * (m//2 + m*(m//2-1) + m*(m-1)*(m//2-1))  # WRONG TODO: FIND BUG
+        sum_term = m * (m//2 + m*(m//2-1) + m*(m-1)*(m//2-1))  # WRONG TODO: FIND BUG
         sum_iter = 0
-        for i in range(m//2):
-            for j in range(m//2):
-                sum_iter += (2*i+1)**2 + (2*j+1)**2
+        for i in range(m // 2):
+            sum_iter += (2*i+1)**2
+        sum_iter *= m
         d_min = np.sqrt(symbols_num * symbol_power / sum_iter)
         # Constellation offset
         self.angle_offset = angle_offset
