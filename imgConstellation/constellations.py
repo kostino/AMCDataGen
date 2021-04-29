@@ -154,3 +154,21 @@ class QAM(Constellation):
         # apply angle offset
         self.symbols = self.symbols * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
 
+
+class PAM(Constellation):
+    """PAM Modulation Scheme Class"""
+
+    def __init__(self, name, symbols_num, symbol_power, angle_offset):
+        # Call parent constructor
+        super().__init__(name, symbols_num)
+        # Symbol Power
+        self.symbol_power = symbol_power
+        # Constellation offset
+        self.angle_offset = angle_offset
+
+        n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
+        D = symbols_num
+        Ax = 2 * n + 1 - D  # PAM Amplitudes 2d+1-D - real axis
+        Ay = 0  # PAM Amplitudes 0 - imag axis
+        # apply angle offset
+        self.symbols = (Ax + 1j * Ay) * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
