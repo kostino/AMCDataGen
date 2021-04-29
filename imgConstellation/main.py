@@ -9,9 +9,12 @@ from PIL import Image
 EbN0_db = 10
 
 
+fourPAM = PAM("4-PAM", 4, 8, 45)
 sixteenPSK = PSK("16-PSK", 16, 8, 45)
 sixteenQAM = QAM("16-QAM", 16, 8, 45)
 threeAPSK = APSK("SimpleAPSK", rings=3, symbols_num=[4, 8, 12], radii=[2, 4, 8], angle_offsets=[0, 45, 0])
+print(fourPAM.symbols)
+fourPAM.plot()
 print(sixteenPSK.symbols)
 sixteenPSK.plot()
 print(sixteenQAM.symbols)
