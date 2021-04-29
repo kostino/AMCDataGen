@@ -134,6 +134,13 @@ class QAM(Constellation):
         super().__init__(name, symbols_num)
         # Symbol Power
         self.symbol_power = symbol_power
+        m = np.sqrt(symbols_num).astype(int)
+        sum_term = (m-2) * (m//2 + m*(m//2-1) + m*(m-1)*(m//2-1))  # WRONG TODO: FIND BUG
+        sum_iter = 0
+        for i in range(m//2):
+            for j in range(m//2):
+                sum_iter += (2*i+1)**2 + (2*j+1)**2
+        d_min = np.sqrt(symbols_num * symbol_power / sum_iter)
         # Constellation offset
         self.angle_offset = angle_offset
         n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
@@ -144,8 +151,8 @@ class QAM(Constellation):
         nGray = np.reshape(a, (symbols_num))  # reshape to 1xM - Gray code walk on KMap
         inputGray = n
         (x, y) = np.divmod(inputGray, D)  # element-wise quotient and remainder
-        Ax = 2 * x + 1 - D  # PAM Amplitudes 2d+1-D - real axis
-        Ay = 2 * y + 1 - D  # PAM Amplitudes 2d+1-D - imag axis
+        Ax = d_min * x + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - real axis
+        Ay = d_min * y + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - imag axis
         self.symbols = Ax + 1j * Ay
         # apply angle offset
         self.symbols = self.symbols * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
@@ -161,7 +168,7 @@ class PAM(Constellation):
         self.symbol_power = symbol_power
         # Constellation offset
         self.angle_offset = angle_offset
-        egPAM = 3 * symbol_power / (symbols_num - 1)
+        egPAM = 3 * symbol_power / (symbols_num**2 - 1)
         d_min = 2 * np.sqrt(egPAM)
         n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
         D = symbols_num
