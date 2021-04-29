@@ -38,12 +38,20 @@ class Constellation:
         self.symbol_bits = np.log2(symbols_num)
         # Uninitialized array to place symbols
         self.symbols = np.empty(symbols_num)
+        # Initialize the default random generator
+        self.rng = np.random.default_rng()
 
     # Plot constellation
     def plot(self):
         plt.figure(figsize=(5, 5))
         plt.scatter(self.symbols.real, self.symbols.imag)
         plt.show()
+
+    # Generate Samples
+    def sampleGenerator(self, samples_num):
+        indexes = self.rng.integers(0, self.symbols_num, samples_num)
+        samples = self.symbols[indexes]
+        return samples
 
 
 class PSK(Constellation):
@@ -154,6 +162,16 @@ class QAM(Constellation):
         self.symbols = self.symbols * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
 
 
+def IQplot(samples):
+    """
+    Utility function to print I/Q samples
+    :param samples: Complex I/Q samples to print
+    """
+    plt.figure(figsize=(5, 5))
+    plt.scatter(samples.real, samples.imag)
+    plt.show()
+
+
 sixteenPSK = PSK("16-PSK", 16, 8, 45)
 sixteenQAM = QAM("16-QAM", 16, 8, 45)
 threeAPSK = APSK("SimpleAPSK", rings=3, symbols_num=[4, 8, 12], radii=[2, 4, 8], angle_offsets=[0, 45, 0])
@@ -163,3 +181,6 @@ print(sixteenQAM.symbols)
 sixteenQAM.plot()
 print(threeAPSK.symbols)
 threeAPSK.plot()
+
+samplesAPSK = threeAPSK.sampleGenerator(15)
+IQplot(samplesAPSK)
