@@ -4,7 +4,7 @@ from PIL import Image
 
 # === Function to map from I/Q plane to X-Y image plane ===
 def IQtoXY(symbols, i_range, q_range, img_resolution):
-    '''
+    """
     Maps complex I/Q samples to an X-Y plane compatible with 2D array indices
 
     :param symbols: Complex I/Q samples array
@@ -12,7 +12,7 @@ def IQtoXY(symbols, i_range, q_range, img_resolution):
     :param q_range: Tuple indicating the range of Q to be converted e.g: (-7,7)
     :param img_resolution: Target X-Y plane dimensions e.g: (200,200) creates a 200x200 image
     :return: x_samples, y_samples: X and Y coordinates of converted samples
-    '''
+    """
     # Samples to be transformed
     i_samples = symbols.real
     q_samples = symbols.imag
@@ -28,13 +28,13 @@ def IQtoXY(symbols, i_range, q_range, img_resolution):
     y_mask = y_samples >= img_resolution[1]
     x_samples = np.delete(x_samples, y_mask)
     y_samples = np.delete(y_samples, y_mask)
-    # Return
+    # Return X and Y coordinates of converted samples
     return x_samples, y_samples
 
 
 # === Grayscale Image Generation - Section III-B ===
 def grayscale(symbols, i_range, q_range, img_resolution, filename):
-    '''
+    """
     Generates Grayscale Image from complex I/Q samples
 
     :param symbols: Array of complex I/Q samples
@@ -43,7 +43,7 @@ def grayscale(symbols, i_range, q_range, img_resolution, filename):
     :param img_resolution: Output image resolution (x,y) (e.g: (200,200))
     :param filename: Output image file name
     :return:
-    '''
+    """
 
     # Transform I/Q samples to XY plane
     x_samples, y_samples = IQtoXY(symbols, i_range, q_range, img_resolution)
@@ -76,7 +76,7 @@ def grayscale(symbols, i_range, q_range, img_resolution, filename):
 
 # === Enhanced Grayscale Image Generation - Section III-C ===
 def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power, decay):
-    '''
+    """
     Generates Enhanced Grayscale Image from complex I/Q samples using exponential decay.
 
     :param symbols: Array of complex I/Q samples
@@ -87,7 +87,7 @@ def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power
     :param power: Power of each I/Q sample
     :param decay: Exponential decay coefficient
     :return:
-    '''
+    """
     # Transform I/Q samples to XY plane
     x_samples, y_samples = IQtoXY(symbols, i_range, q_range, img_resolution)
 
