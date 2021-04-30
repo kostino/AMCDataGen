@@ -135,12 +135,8 @@ class QAM(Constellation):
         # Symbol Power
         self.symbol_power = symbol_power
         m = np.sqrt(symbols_num).astype(int)
-        sum_term = m * (m//2 + m*(m//2-1) + m*(m-1)*(m//2-1))  # WRONG TODO: FIND BUG
-        sum_iter = 0
-        for i in range(m // 2):
-            sum_iter += (2*i+1)**2
-        sum_iter *= m
-        d_min = np.sqrt(symbols_num * symbol_power / sum_iter)
+        sum_term = m**2 * (m**2-1) / 6  # CORRECT EXPRESSION
+        d_min = np.sqrt(symbols_num * symbol_power / sum_term)  # calculate dmin from avg symbol power
         # Constellation offset
         self.angle_offset = angle_offset
         n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
@@ -148,7 +144,7 @@ class QAM(Constellation):
         D = np.sqrt(symbols_num).astype(int)  # Dimension of K-Map - N x N matrix
         a = np.reshape(a, (D, D))  # NxN gray coded matrix
         oddRows = np.arange(start=1, stop=D, step=2)  # identify alternate rows
-        nGray = np.reshape(a, (symbols_num))  # reshape to 1xM - Gray code walk on KMap
+        nGray = np.reshape(a, symbols_num)  # reshape to 1xM - Gray code walk on KMap
         inputGray = n
         (x, y) = np.divmod(inputGray, D)  # element-wise quotient and remainder
         Ax = d_min * x + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - real axis
