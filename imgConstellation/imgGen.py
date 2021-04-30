@@ -106,6 +106,9 @@ def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power
         for y, y_centroid in enumerate(y_centroids):
             # For each pixel iterate over all samples to calculate their impact on the pixel's power
             for sample in range(samples_num):
+                # Hacky optimization to skip calculations. Cuts significant time
+                # if abs(x_centroid - x_samples[sample]) > 5 or abs(y_centroid - y_samples[sample]) > 5:
+                #     continue
                 # Calculate sample distance from pixel centroid
                 centroid_distance = np.sqrt(
                     (x_centroid - x_samples[sample]) ** 2 + (y_centroid - y_samples[sample]) ** 2)
