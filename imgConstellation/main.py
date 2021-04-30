@@ -27,6 +27,6 @@ threeAPSK.plot()
 samplesAPSK = threeAPSK.sampleGenerator(15)
 IQplot(samplesAPSK)
 
-# Generate Grayscale image from a 3 ring APSK constellation
+# Generate Grayscale and Enhanced Grayscale images from a 3 ring APSK constellation
 grayscale(threeAPSK.symbols, (-7, 7), (-7, 7), (200, 200), "constellation.png")
-
+enhancedGrayscale(threeAPSK.symbols, (-7, 7), (-7, 7), (200, 200), "constellation_en.png", 50, 1)
