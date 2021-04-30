@@ -41,9 +41,15 @@ class Constellation:
         plt.show()
 
     # Generate Samples
-    def sampleGenerator(self, samples_num):
+    def sampleGenerator(self, samples_num, SNR=None):
         indexes = self.rng.integers(0, self.symbols_num, samples_num)
         samples = self.symbols[indexes]
+        if SNR is not None:
+            pnoise = self.symbol_power / np.power(10, SNR/10)
+            N0 = np.sqrt(pnoise)  # Find AWGN Amplitude and Power
+            n = N0 * (np.random.randn(samples_num) + 1j * np.random.randn(samples_num)) / np.sqrt(2)  # Prepare AWGN
+            samples = samples + n  # Apply AWGN to samples
+
         return samples
 
 
