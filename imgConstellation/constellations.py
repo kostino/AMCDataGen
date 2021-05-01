@@ -79,9 +79,9 @@ class PSK(Constellation):
     """
 
     def __init__(self, name, symbols_num, radius, angle_offset):
-        # Call parent constructor
-        # find symbol power first
+        # Find symbol power first
         symbol_power = radius**2
+        # Call parent constructor
         super().__init__(name, symbols_num, symbol_power)
         # Symbol Ring Radius
         self.radius = radius
