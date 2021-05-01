@@ -103,17 +103,13 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     power_grid = np.zeros(img_resolution, dtype='float64')
 
     # Calculate pixel centroids in continuous x,y plane
-    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((img_resolution[0], 1))
-    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, img_resolution[1]))
+    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((img_resolution[0], 1, 1))
+    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, img_resolution[1], 1))
 
-    centroid_distances = np.zeros((img_resolution[0], img_resolution[1], samples_num))
-    for sample in range(samples_num):
-        # Hacky optimization to skip calculations. Cuts significant time
-        # if abs(x_centroid - x_samples[sample]) > 5 or abs(y_centroid - y_samples[sample]) > 5:
-        #     continue
-        # Calculate sample distance from pixel centroid
-        centroid_distances[..., sample] = np.sqrt(
-            (x_centroids - x_samples[sample]) ** 2 + (y_centroids - y_samples[sample]) ** 2)
+    x_samples = np.array(x_samples).reshape((1, 1, samples_num))
+    y_samples = np.array(y_samples).reshape((1, 1, samples_num))
+
+    centroid_distances = np.sqrt((x_centroids - x_samples) ** 2 + (y_centroids - y_samples) ** 2)
     if channels > 1:
         power_grid = np.zeros(img_resolution)
         for channel in range(channels):
