@@ -135,4 +135,7 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     # Show Image
     # img.show()
     # Permanently Save Image
-    img.save(filename)
+    try:
+        img.save(filename)
+    except NameError:
+        print("Only single and 3-channel images supported")
