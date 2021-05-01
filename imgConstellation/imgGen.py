@@ -103,26 +103,25 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     power_grid = np.zeros(img_resolution, dtype='float64')
 
     # Calculate pixel centroids in continuous x,y plane
-    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32')
-    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32')
+    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((img_resolution[0], 1))
+    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, img_resolution[1]))
 
-    # Iterate over pixels
-    for x, x_centroid in enumerate(x_centroids):
-        for y, y_centroid in enumerate(y_centroids):
-            # For each pixel iterate over all samples to calculate their impact on the pixel's power
-            for sample in range(samples_num):
-                # Hacky optimization to skip calculations. Cuts significant time
-                # if abs(x_centroid - x_samples[sample]) > 5 or abs(y_centroid - y_samples[sample]) > 5:
-                #     continue
-                # Calculate sample distance from pixel centroid
-                centroid_distance = np.sqrt(
-                    (x_centroid - x_samples[sample]) ** 2 + (y_centroid - y_samples[sample]) ** 2)
-                # Increment power according to sample's influence to pixel's power
-                if channels > 1:
-                    for channel in range(channels):
-                        power_grid[x, y, channel] += power[channel] * np.exp(-decay[channel] * centroid_distance)
-                else:
-                    power_grid[x, y] += power * np.exp(-decay * centroid_distance)
+    centroid_distances = np.zeros((img_resolution[0], img_resolution[1], samples_num))
+    for sample in range(samples_num):
+        # Hacky optimization to skip calculations. Cuts significant time
+        # if abs(x_centroid - x_samples[sample]) > 5 or abs(y_centroid - y_samples[sample]) > 5:
+        #     continue
+        # Calculate sample distance from pixel centroid
+        centroid_distances[..., sample] = np.sqrt(
+            (x_centroids - x_samples[sample]) ** 2 + (y_centroids - y_samples[sample]) ** 2)
+    if channels > 1:
+        power_grid = np.zeros(img_resolution)
+        for channel in range(channels):
+            pg = power[channel] * np.exp(-decay[channel] * centroid_distances)
+            power_grid[..., channel] = np.sum(pg, axis=2)
+    else:
+        pg = power * np.exp(-decay * centroid_distances)
+        power_grid = np.sum(pg, axis=2)
 
     # Prepare for grayscale image
     # Normalize Grid Array to 255 (8-bit pixel value)
