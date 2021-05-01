@@ -22,11 +22,13 @@ class Constellation:
     """
 
     # Constructor
-    def __init__(self, name, symbols_num):
+    def __init__(self, name, symbols_num, symbol_power):
         # Modulation Scheme Name
         self.name = name
         # Number of Symbols
         self.symbols_num = symbols_num
+        # Average Symbol Power
+        self.symbol_power = symbol_power
         # Bits per symbol
         self.symbol_bits = np.log2(symbols_num)
         # Uninitialized array to place symbols
@@ -78,7 +80,9 @@ class PSK(Constellation):
 
     def __init__(self, name, symbols_num, radius, angle_offset):
         # Call parent constructor
-        super().__init__(name, symbols_num)
+        # find symbol power first
+        symbol_power = radius**2
+        super().__init__(name, symbols_num, symbol_power)
         # Symbol Ring Radius
         self.radius = radius
         # Constellation offset
@@ -115,7 +119,8 @@ class APSK(Constellation):
 
     def __init__(self, name, rings, symbols_num, radii, angle_offsets):
         # Call parent constructor
-        super().__init__(name, np.sum(symbols_num))
+        symbol_power = np.mean(np.power(np.array(radii), 2))
+        super().__init__(name, np.sum(symbols_num), symbol_power)
         # Number of rings
         self.rings = rings
         # Radii for symbol rings
@@ -137,9 +142,7 @@ class QAM(Constellation):
 
     def __init__(self, name, symbols_num, symbol_power, angle_offset):
         # Call parent constructor
-        super().__init__(name, symbols_num)
-        # Symbol Power
-        self.symbol_power = symbol_power
+        super().__init__(name, symbols_num, symbol_power)
         m = np.sqrt(symbols_num).astype(int)
         sum_term = m**2 * (m**2-1) / 6  # CORRECT EXPRESSION
         d_min = np.sqrt(symbols_num * symbol_power / sum_term)  # calculate dmin from avg symbol power
@@ -165,9 +168,7 @@ class PAM(Constellation):
 
     def __init__(self, name, symbols_num, symbol_power, angle_offset):
         # Call parent constructor
-        super().__init__(name, symbols_num)
-        # Symbol Power
-        self.symbol_power = symbol_power
+        super().__init__(name, symbols_num, symbol_power)
         # Constellation offset
         self.angle_offset = angle_offset
         egPAM = 3 * symbol_power / (symbols_num**2 - 1)
