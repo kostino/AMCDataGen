@@ -119,7 +119,9 @@ class APSK(Constellation):
 
     def __init__(self, name, rings, symbols_num, radii, angle_offsets):
         # Call parent constructor
-        symbol_power = np.mean(np.power(np.array(radii), 2))
+        n = sum(symbols_num)
+        p = np.array(symbols_num)/n
+        symbol_power = np.sum(np.power(np.array(radii), 2) * p)
         super().__init__(name, np.sum(symbols_num), symbol_power)
         # Number of rings
         self.rings = rings
