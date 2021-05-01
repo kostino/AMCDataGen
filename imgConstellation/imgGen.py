@@ -33,7 +33,7 @@ def IQtoXY(symbols, i_range, q_range, img_resolution):
 
 
 # === Grayscale Image Generation - Section III-B ===
-def grayscale(symbols, i_range, q_range, img_resolution, filename):
+def grayscaleImgGen(symbols, i_range, q_range, img_resolution, filename):
     """
     Generates Grayscale Image from complex I/Q samples
 
@@ -74,18 +74,19 @@ def grayscale(symbols, i_range, q_range, img_resolution, filename):
     img.save(filename)
 
 
-# === Enhanced Grayscale Image Generation - Section III-C ===
-def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power, decay):
+# === Enhanced Grayscale and RGB Image Generation - Section III-C&D ===
+def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels, power, decay):
     """
-    Generates Enhanced Grayscale Image from complex I/Q samples using exponential decay.
+    Generates Enhanced Grayscale and RGB Images from complex I/Q samples using exponential decay.
 
     :param symbols: Array of complex I/Q samples
     :param i_range: Tuple for I values range to include in image (e.g: (-7,7))
     :param q_range: Tuple for Q values range to include in image (e.g: (-7,7))
     :param img_resolution: Output image resolution (x,y) (e.g: (200,200))
     :param filename: Output image file name
-    :param power: Power of each I/Q sample
-    :param decay: Exponential decay coefficient
+    :param channels: Number of image channels: 1 -> Grayscale, 3 -> RGB
+    :param power: Tuple for power of I/Q samples on each layer/channel
+    :param decay: Tuple for exponential decay coefficient for each layer/channel
     :return:
     """
     # Transform I/Q samples to XY plane
@@ -93,6 +94,10 @@ def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power
 
     # Number of final samples
     samples_num = len(x_samples)
+
+    # Add channel number to dimensions if dimensions > 1
+    if channels > 1:
+        img_resolution = (img_resolution[0], img_resolution[1], channels)
 
     # Numpy array representing the 'power' of each pixel value as influenced by each sample
     power_grid = np.zeros(img_resolution, dtype='float64')
@@ -113,7 +118,11 @@ def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power
                 centroid_distance = np.sqrt(
                     (x_centroid - x_samples[sample]) ** 2 + (y_centroid - y_samples[sample]) ** 2)
                 # Increment power according to sample's influence to pixel's power
-                power_grid[x, y] += power * np.exp(-decay * centroid_distance)
+                if channels > 1:
+                    for channel in range(channels):
+                        power_grid[x, y, channel] += power[channel] * np.exp(-decay[channel] * centroid_distance)
+                else:
+                    power_grid[x, y] += power * np.exp(-decay * centroid_distance)
 
     # Prepare for grayscale image
     # Normalize Grid Array to 255 (8-bit pixel value)
@@ -124,7 +133,10 @@ def enhancedGrayscale(symbols, i_range, q_range, img_resolution, filename, power
     img_grid = np.empty(img_resolution, dtype='uint8')
     np.copyto(img_grid, normalized_grid, casting='unsafe')
     # Generate grayscale image from grid array
-    img = Image.fromarray(img_grid, mode='L')
+    if channels == 1:
+        img = Image.fromarray(img_grid, mode='L')
+    elif channels == 3:
+        img = Image.fromarray(img_grid, mode='RGB')
     # Show Image
     # img.show()
     # Permanently Save Image
