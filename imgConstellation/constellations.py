@@ -42,14 +42,14 @@ class Constellation:
         plt.scatter(self.symbols.real, self.symbols.imag)
         plt.show()
 
-    # Generate Samples
+    # Generate Samples, SNR is in db
     def sampleGenerator(self, samples_num, SNR=None):
         indexes = self.rng.integers(0, self.symbols_num, samples_num)
         samples = self.symbols[indexes]
         if SNR is not None:
-            pnoise = self.symbol_power / np.power(10, SNR/10)
-            N0 = np.sqrt(pnoise)  # Find AWGN Amplitude and Power
-            n = N0 * (np.random.randn(samples_num) + 1j * np.random.randn(samples_num)) / np.sqrt(2)  # Prepare AWGN
+            gamma = np.power(10, SNR/10)
+            N0 = self.symbol_power / gamma
+            n = np.sqrt(N0/2) * (np.random.randn(samples_num) + 1j * np.random.randn(samples_num))  # AWGN
             samples = samples + n  # Apply AWGN to samples
 
         return samples
