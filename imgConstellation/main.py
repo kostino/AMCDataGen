@@ -24,10 +24,15 @@ sixteenQAM.plot()
 print(threeAPSK.symbols)
 threeAPSK.plot()
 
-samplesAPSK = threeAPSK.sampleGenerator(15)
+samplesAPSK = threeAPSK.sampleGenerator(1000, SNR=10)
 IQplot(samplesAPSK)
 
 # Generate Grayscale, Enhanced Grayscale and RGB images from a 3 ring APSK constellation
-grayscaleImgGen(threeAPSK.symbols, (-7, 7), (-7, 7), (200, 200), "constellation_gray.png")
-enhancedImgGen(threeAPSK.symbols, (-7, 7), (-7, 7), (200, 200), "constellation_enGray.png", 1, 50, 1)
-enhancedImgGen(threeAPSK.symbols, (-7, 7), (-7, 7), (200, 200), "constellation_rgb.png", 3, (50, 50, 50), (3, 2, 1))
+grayscaleImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_gray.png")
+enhancedImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_enGray.png", 1, 50, 1)
+enhancedImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_rgb.png", 3, (100, 80, 60), (0.4, 0.3, 0.2))
+
+# Calculate advised bounds and generate image using them
+x_min, x_max, y_min, y_max = threeAPSK.bounds(SNR=10, stds_num=2, padding=5)
+enhancedImgGen(samplesAPSK, (x_min, x_max), (y_min, y_max), (200, 200), "constellation_rgb_bounds.png", 3,
+               (2000, 2000, 2000), (0.4, 0.3, 0.2))
