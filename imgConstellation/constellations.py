@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from samples import Samples
 
 # === Constellations ===
 
@@ -61,14 +62,7 @@ class Constellation:
         :param SNR: Signal to Noise Ratio in dB to apply Additive White Gaussian Noise (optional)
         :return: Array of complex constellation samples
         '''
-        indexes = self.rng.integers(0, self.symbols_num, samples_num)
-        samples = self.symbols[indexes]
-        if SNR is not None:
-            gamma = np.power(10, SNR/10)
-            N0 = self.symbol_power / gamma
-            n = np.sqrt(N0/2) * (np.random.randn(samples_num) + 1j * np.random.randn(samples_num))  # AWGN
-            samples = samples + n  # Apply AWGN to samples
-
+        samples = Samples(self.name, samples_num, self.symbols, self.symbol_power, SNR)
         return samples
 
     # Calculates advised bounds in the I/Q plane
