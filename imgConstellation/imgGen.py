@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image
-
+import time
+import numexpr as ne
 
 # === Function to map from I/Q plane to X-Y image plane ===
 def IQtoXY(symbols, i_range, q_range, img_resolution):
@@ -100,24 +101,25 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
         img_resolution = (img_resolution[0], img_resolution[1], channels)
 
     # Numpy array representing the 'power' of each pixel value as influenced by each sample
-    power_grid = np.zeros(img_resolution, dtype='float64')
 
     # Calculate pixel centroids in continuous x,y plane
-    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((img_resolution[0], 1, 1))
-    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, img_resolution[1], 1))
+    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((1, img_resolution[0], 1))
+    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, 1, img_resolution[1]))
 
-    x_samples = np.array(x_samples).reshape((1, 1, samples_num))
-    y_samples = np.array(y_samples).reshape((1, 1, samples_num))
+    x_samples = np.array(x_samples).reshape((samples_num,1,1))
+    y_samples = np.array(y_samples).reshape((samples_num,1,1))
 
-    centroid_distances = np.sqrt((x_centroids - x_samples) ** 2 + (y_centroids - y_samples) ** 2)
+    centroid_distances = ne.evaluate("sqrt((x_centroids - x_samples) ** 2 + (y_centroids - y_samples) ** 2)")
     if channels > 1:
         power_grid = np.zeros(img_resolution)
         for channel in range(channels):
-            pg = power[channel] * np.exp(-decay[channel] * centroid_distances)
-            power_grid[..., channel] = np.sum(pg, axis=2)
+            d = decay[channel]
+            p = power[channel]
+            pg = ne.evaluate('p / exp(d * centroid_distances)')
+            power_grid[..., channel] = np.sum(pg, axis=0)
     else:
-        pg = power * np.exp(-decay * centroid_distances)
-        power_grid = np.sum(pg, axis=2)
+        pg = ne.evaluate('power / exp(decay * centroid_distances)')
+        power_grid = np.sum(pg, axis=0)
 
     # Prepare for grayscale image
     # Normalize Grid Array to 255 (8-bit pixel value)
@@ -125,8 +127,7 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     # Quantize grid to integers
     normalized_grid = np.floor(normalized_grid)
     # Copy result to uint8 array for writing grayscale image
-    img_grid = np.empty(img_resolution, dtype='uint8')
-    np.copyto(img_grid, normalized_grid, casting='unsafe')
+    img_grid = normalized_grid.astype('uint8', casting='unsafe')
     # Generate grayscale image from grid array
     if channels == 1:
         img = Image.fromarray(img_grid, mode='L')
