@@ -54,6 +54,34 @@ class Constellation:
 
         return samples
 
+    # Calculates advised bounds
+    def bounds(self, SNR=None, stds_num=0, padding=0):
+        # Calculate max real and imaginary components
+        x_min = np.min(self.symbols.real)
+        x_max = np.max(self.symbols.real)
+        y_min = np.min(self.symbols.imag)
+        y_max = np.max(self.symbols.imag)
+
+        # Calculate N0 and extend boundaries by stds_nums * np.sqrt(N0/2)
+        # Setting strds_nums=2 should contain ~90% of samples from symbols near the edges
+        if SNR is not None:
+            gamma = np.power(10, SNR/10)
+            N0 = self.symbol_power / gamma
+            x_min -= stds_num * np.sqrt(N0/2)
+            x_max += stds_num * np.sqrt(N0/2)
+            y_min -= stds_num * np.sqrt(N0/2)
+            y_max += stds_num * np.sqrt(N0/2)
+
+        # Add padding
+        x_offset = (100 * (x_max - x_min) / (100 - padding) - (x_max - x_min)) / 2
+        y_offset = (100 * (y_max - y_min) / (100 - padding) - (y_max - y_min)) / 2
+        x_min -= x_offset
+        x_max += x_offset
+        y_min -= y_offset
+        y_max += y_offset
+
+        return x_min, x_max, y_min, y_max
+
 
 class PSK(Constellation):
     """
