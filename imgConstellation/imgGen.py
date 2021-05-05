@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
-import time
 import numexpr as ne
+
 
 # === Function to map from I/Q plane to X-Y image plane ===
 def IQtoXY(symbols, i_range, q_range, img_resolution):
@@ -106,8 +106,8 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((1, img_resolution[0], 1))
     y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, 1, img_resolution[1]))
 
-    x_samples = np.array(x_samples).reshape((samples_num,1,1))
-    y_samples = np.array(y_samples).reshape((samples_num,1,1))
+    x_samples = np.array(x_samples).reshape((samples_num, 1, 1))
+    y_samples = np.array(y_samples).reshape((samples_num, 1, 1))
 
     centroid_distances = ne.evaluate("sqrt((x_centroids - x_samples) ** 2 + (y_centroids - y_samples) ** 2)")
     if channels > 1:
