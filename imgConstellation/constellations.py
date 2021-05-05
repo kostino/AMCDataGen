@@ -23,6 +23,13 @@ class Constellation:
 
     # Constructor
     def __init__(self, name, symbols_num, symbol_power):
+        '''
+        Constructor function for Constellation
+
+        :param name: String to identify constellation
+        :param symbols_num: Number of symbols
+        :param symbol_power: Symbol power
+        '''
         # Modulation Scheme Name
         self.name = name
         # Number of Symbols
@@ -38,12 +45,22 @@ class Constellation:
 
     # Plot constellation
     def plot(self):
+        '''
+        Plots the constellation
+        :return:
+        '''
         plt.figure(figsize=(5, 5))
         plt.scatter(self.symbols.real, self.symbols.imag)
         plt.show()
 
-    # Generate Samples, SNR is in db
+    # Generate Samples and applies AWGN. SNR is in db
     def sampleGenerator(self, samples_num, SNR=None):
+        '''
+        Generates random samples from the constellation by sampling a discrete uniform distribution
+        :param samples_num: Number of samples to be generated
+        :param SNR: Signal to Noise Ratio in dB to apply Additive White Gaussian Noise (optional)
+        :return: Array of complex constellation samples
+        '''
         indexes = self.rng.integers(0, self.symbols_num, samples_num)
         samples = self.symbols[indexes]
         if SNR is not None:
@@ -54,8 +71,16 @@ class Constellation:
 
         return samples
 
-    # Calculates advised bounds
+    # Calculates advised bounds in the I/Q plane
     def bounds(self, SNR=None, stds_num=0, padding=0):
+        '''
+        Calculates advised bounds in the I/Q plane for both I and Q axis
+        :param SNR: Signal to Noise Ratio in dB to account for Additive White Gaussian Noise (AWGN)
+        :param stds_num: Padding factor based on AWGN's power / Standard Deviation. E.g: 2 covers ~90% of edge samples,
+        3 covers ~99%
+        :param padding: Image padding on the edges in percent (%) based on each axis bandwidth.
+        :return: Bound indicators for I and Q axes: I_minimum, I_maximum, Q_minimum, Q_maximum
+        '''
         # Calculate max real and imaginary components
         x_min = np.min(self.symbols.real)
         x_max = np.max(self.symbols.real)
