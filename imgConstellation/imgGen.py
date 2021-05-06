@@ -1,3 +1,6 @@
+import os
+os.environ['NUMEXPR_MAX_THREADS'] = '16'
+os.environ['NUMEXPR_NUM_THREADS'] = '8'
 import numpy as np
 from PIL import Image
 import numexpr as ne
