@@ -59,14 +59,16 @@ for snr in (0, 5, 10, 15):
     # Iterate over Modulation Schemes
     for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
         print("Starting modulation {} for {}dB".format(modulation.name, snr))
-        os.makedirs("data/{}_db/{}/".format(snr, modulation.name))
-        for batch in range(batches):
-            # print(batch)
-            # Generate samples
-            samples = modulation.sampleGenerator(samples_num=1000, SNR=snr)
-            samples.enhancedRGB(img_resolution=img_resolution,
-                                filename="data/{}_db/{}/{}.png".format(snr, modulation.name, batch))
-        confirmation = input("{}db {} is done, continue?".format(snr, modulation))
+        if modulation.name not in os.listdir("data/{}_db".format(snr)):
+            os.makedirs("data/{}_db/{}/".format(snr, modulation.name))
+            for batch in range(batches):
+                # print(batch)
+                # Generate samples
+                samples = modulation.sampleGenerator(samples_num=1000, SNR=snr)
+                samples.enhancedRGB(img_resolution=img_resolution,
+                                    filename="data/{}_db/{}/{}.png".format(snr, modulation.name, batch))
+        else:
+            print("Skipping modulation {} for {}dB. Already completed".format(modulation.name, snr))
 
 
 

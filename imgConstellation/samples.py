@@ -38,30 +38,22 @@ class Samples:
             n = np.sqrt(N0 / 2) * (np.random.randn(samples_num) + 1j * np.random.randn(samples_num))  # AWGN
             samples = samples + n  # Apply AWGN to samples
         self.samples = samples
-        x_min = np.min(self.symbols.real)
-        x_max = np.max(self.symbols.real)
-        y_min = np.min(self.symbols.imag)
-        y_max = np.max(self.symbols.imag)
+        x_max = np.max(np.abs(self.symbols.real))
+        y_max = np.max(np.abs(self.symbols.imag))
+        max_range = np.max(np.array((x_max, y_max)))
 
         # Calculate N0 and extend boundaries by stds_nums * np.sqrt(N0/2)
         # Setting strds_nums=2 should contain ~90% of samples from symbols near the edges
         if SNR is not None:
             gamma = np.power(10, SNR / 10)
             N0 = symbol_power / gamma
-            x_min -= 2 * np.sqrt(N0 / 2)
-            x_max += 2 * np.sqrt(N0 / 2)
-            y_min -= 2 * np.sqrt(N0 / 2)
-            y_max += 2 * np.sqrt(N0 / 2)
+            max_range += 2 * np.sqrt(N0 / 2)
 
         # Add padding
-        x_offset = (100 * (x_max - x_min) / (100 - 5) - (x_max - x_min)) / 2
-        y_offset = (100 * (y_max - y_min) / (100 - 5) - (y_max - y_min)) / 2
-        x_min -= x_offset
-        x_max += x_offset
-        y_min -= y_offset
-        y_max += y_offset
-        self.irange = (x_min, x_max)
-        self.qrange = (y_min, y_max)
+        offset = (100 * 2 * max_range / (100 - 5) - (2 * max_range)) / 2
+        scale = offset + max_range
+        self.irange = (-scale, scale)
+        self.qrange = (-scale, scale)
 
     def plot(self):
         '''
