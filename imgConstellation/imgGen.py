@@ -80,7 +80,7 @@ def grayscaleImgGen(symbols, i_range, q_range, img_resolution, filename):
 
 
 # === Enhanced Grayscale and RGB Image Generation - Section III-C&D ===
-def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels, power, decay, globalNorm):
+def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels, power, decay, global_norm):
     """
     Generates Enhanced Grayscale and RGB Images from complex I/Q samples using exponential decay.
 
@@ -130,7 +130,7 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
 
     # Prepare for grayscale image
     # Normalize Grid Array to 255 (8-bit pixel value)
-    if globalNorm:
+    if global_norm:
         # Normalize on a global basis
         normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1)).reshape((1, 1, channels))) * 255
     else:

@@ -31,8 +31,8 @@ IQplot(samplesAPSK)
 
 # Generate Grayscale, Enhanced Grayscale and RGB images from a 3 ring APSK constellation
 grayscaleImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_gray.png")
-enhancedImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_enGray.png", 1, 50, 1)
-enhancedImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_rgb.png", 3, (100, 80, 60), (0.4, 0.3, 0.2))
+enhancedImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_enGray.png", 1, 50, 1, False)
+enhancedImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_rgb.png", 3, (100, 80, 60), (0.4, 0.3, 0.2), False)
 
 # Calculate advised bounds and generate image using them
 x_min, x_max, y_min, y_max = threeAPSK.bounds(SNR=10, stds_num=2, padding=5)
