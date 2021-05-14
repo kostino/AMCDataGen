@@ -80,7 +80,7 @@ def grayscaleImgGen(symbols, i_range, q_range, img_resolution, filename):
 
 
 # === Enhanced Grayscale and RGB Image Generation - Section III-C&D ===
-def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels, power, decay):
+def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels, power, decay, globalNorm):
     """
     Generates Enhanced Grayscale and RGB Images from complex I/Q samples using exponential decay.
 
@@ -92,6 +92,7 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     :param channels: Number of image channels: 1 -> Grayscale, 3 -> RGB
     :param power: Tuple for power of I/Q samples on each layer/channel
     :param decay: Tuple for exponential decay coefficient for each layer/channel
+    :param globalNorm: Whether to normalize the image pixels on a global-across all channels or on a per-channel basis
     :return:
     """
     # Transform I/Q samples to XY plane
@@ -129,7 +130,12 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
 
     # Prepare for grayscale image
     # Normalize Grid Array to 255 (8-bit pixel value)
-    normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1)).reshape((1, 1, channels))) * 255
+    if globalNorm:
+        # Normalize on a global basis
+        normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1)).reshape((1, 1, channels))) * 255
+    else:
+        # Normalize on a per channel basis
+        normalized_grid = (power_grid / np.max(power_grid)) * 255
     # Quantize grid to integers
     normalized_grid = np.floor(normalized_grid)
     # Copy result to uint8 array for writing grayscale image
