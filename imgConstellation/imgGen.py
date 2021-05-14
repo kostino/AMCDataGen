@@ -1,9 +1,10 @@
-import os
-os.environ['NUMEXPR_MAX_THREADS'] = '16'
-os.environ['NUMEXPR_NUM_THREADS'] = '8'
+# import os
+# os.environ['NUMEXPR_MAX_THREADS'] = '16'
+# os.environ['NUMEXPR_NUM_THREADS'] = '8'
 import numpy as np
 from PIL import Image
 import numexpr as ne
+import cupy as cp
 
 
 # === Function to map from I/Q plane to X-Y image plane ===
@@ -106,8 +107,10 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     # Numpy array representing the 'power' of each pixel value as influenced by each sample
 
     # Calculate pixel centroids in continuous x,y plane
-    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape((1, img_resolution[0], 1))
-    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape((1, 1, img_resolution[1]))
+    x_centroids = np.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape(
+        (1, img_resolution[0], 1))
+    y_centroids = np.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape(
+        (1, 1, img_resolution[1]))
 
     x_samples = np.array(x_samples).reshape((samples_num, 1, 1))
     y_samples = np.array(y_samples).reshape((samples_num, 1, 1))
@@ -126,7 +129,75 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
 
     # Prepare for grayscale image
     # Normalize Grid Array to 255 (8-bit pixel value)
-    normalized_grid = (power_grid / np.max(power_grid)) * 255
+    normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1)).reshape((1, 1, channels))) * 255
+    # Quantize grid to integers
+    normalized_grid = np.floor(normalized_grid)
+    # Copy result to uint8 array for writing grayscale image
+    img_grid = normalized_grid.astype('uint8', casting='unsafe')
+    # Generate grayscale image from grid array
+    if channels == 1:
+        img = Image.fromarray(img_grid, mode='L')
+    elif channels == 3:
+        img = Image.fromarray(img_grid, mode='RGB')
+    # Show Image
+    # img.show()
+    # Permanently Save Image
+    try:
+        img.save(filename)
+    except NameError:
+        print("Only single and 3-channel images supported")
+
+
+# === Enhanced Grayscale and RGB Image Generation - Section III-C&D ===
+def enhancedImgGenCUDA(symbols, i_range, q_range, img_resolution, filename, channels, power, decay):
+    """
+    Generates Enhanced Grayscale and RGB Images from complex I/Q samples using exponential decay.
+
+    :param symbols: Array of complex I/Q samples
+    :param i_range: Tuple for I values range to include in image (e.g: (-7,7))
+    :param q_range: Tuple for Q values range to include in image (e.g: (-7,7))
+    :param img_resolution: Output image resolution (x,y) (e.g: (200,200))
+    :param filename: Output image file name
+    :param channels: Number of image channels: 1 -> Grayscale, 3 -> RGB
+    :param power: Tuple for power of I/Q samples on each layer/channel
+    :param decay: Tuple for exponential decay coefficient for each layer/channel
+    :return:
+    """
+    # Transform I/Q samples to XY plane
+    x_samples, y_samples = IQtoXY(symbols, i_range, q_range, img_resolution)
+
+    # Number of final samples
+    samples_num = len(x_samples)
+
+    # Add channel number to dimensions if dimensions > 1
+    if channels > 1:
+        img_resolution = (img_resolution[0], img_resolution[1], channels)
+
+    # Numpy array representing the 'power' of each pixel value as influenced by each sample
+
+    # Calculate pixel centroids in continuous x,y plane
+    x_centroids = cp.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape(
+        (img_resolution[0], 1, 1, 1))
+    y_centroids = cp.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape(
+        (1, img_resolution[1], 1, 1))
+
+    x_samples = cp.array(x_samples, dtype='float32').reshape((1, 1, 1, samples_num))
+    y_samples = cp.array(y_samples, dtype='float32').reshape((1, 1, 1, samples_num))
+
+    decay = cp.array(decay, dtype='float32').reshape((1, 1, channels, 1))
+    power = cp.array(power, dtype='float32').reshape((1, 1, channels, 1))
+
+    pg = cp.ElementwiseKernel('float32 x, float32 x_c, float32 y, float32 y_c, float32 decay, float32 power',
+                              'float32 z',
+                              'z = power / exp(decay * sqrt((x - x_c) * (x - x_c) + (y - y_c) * (y - y_c)))',
+                              'dist')
+
+    powergrid = cp.empty((img_resolution[0], img_resolution[1], channels, samples_num), dtype='float32')
+    pg(x_samples, x_centroids, y_samples, y_centroids, decay, power, powergrid)
+    power_grid = cp.asnumpy(cp.sum(powergrid, axis=4))
+
+    # Normalize Grid Array to 255 (8-bit pixel value)
+    normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1)).reshape((1, 1, channels))) * 255
     # Quantize grid to integers
     normalized_grid = np.floor(normalized_grid)
     # Copy result to uint8 array for writing grayscale image

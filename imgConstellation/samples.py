@@ -97,3 +97,16 @@ class Samples:
             power = (100, 80, 60)
 
         imgGen.enhancedImgGen(self.samples, irange, qrange, img_resolution, filename, 3, power, decay)
+
+    def enhancedRGBCUDA(self, img_resolution, filename, bounds=None, decay=None, power=None):
+        if bounds is not None:
+            (irange, qrange) = bounds
+        else:
+            irange = self.irange
+            qrange = self.qrange
+
+        if decay is None or power is None:
+            decay = (0.4, 0.3, 0.2)
+            power = (100, 80, 60)
+
+        imgGen.enhancedImgGenCUDA(self.samples, irange, qrange, img_resolution, filename, 3, power, decay)
