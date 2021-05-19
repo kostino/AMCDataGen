@@ -12,7 +12,8 @@ class Samples:
             -----------
                 modulation (string): Name of the modulation scheme
                 samples_num (int): Number of samples
-                sample (complex array): Samples on the I/Q plane
+                samples (complex array): Samples on the I/Q plane
+                symbol_power (float): Average symbol power from constellation
 
             Methods:
             -----------
@@ -50,6 +51,11 @@ class Samples:
 
     """ Channel Impairments functions """
     def awgn(self, SNR):
+        """
+        Applies Additive White Gaussian Noise to samples for a given Signal to Noise Ratio (SNR)
+        :param SNR: Signal to Noise Ratio in dB to apply Additive White Gaussian Noise (optional)
+        :return:
+        """
         # Signal to Noise ratio in linear scale (non-dB)
         gamma = np.power(10, SNR / 10)
         # Noise power
@@ -69,11 +75,10 @@ class Samples:
 
     """ Plotting functions """
     def plot(self):
-        '''
-
+        """
         Plots the constellation
         :return:
-        '''
+        """
         plt.figure(figsize=(5, 5))
         plt.scatter(self.samples.real, self.samples.imag)
         plt.show()

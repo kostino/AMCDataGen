@@ -74,4 +74,4 @@ for snr in (0, 5, 10, 15):
 
 # New simplified way of creating images
 
-sixteenPSK.sampleGenerator(1000, SNR=10).enhancedRGB((200, 200), "psk_rgb.png")
+sixteenPSK.sampleGenerator(1000).awgn(SNR=10).enhancedRGB((200, 200), "psk_rgb.png")
