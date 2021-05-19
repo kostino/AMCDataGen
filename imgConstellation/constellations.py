@@ -55,14 +55,14 @@ class Constellation:
         plt.show()
 
     # Generate Samples and applies AWGN. SNR is in db
-    def sampleGenerator(self, samples_num, SNR=None):
+    def sampleGenerator(self, samples_num):
         '''
         Generates random samples from the constellation by sampling a discrete uniform distribution
         :param samples_num: Number of samples to be generated
         :param SNR: Signal to Noise Ratio in dB to apply Additive White Gaussian Noise (optional)
         :return: Array of complex constellation samples
         '''
-        samples = Samples(self.name, samples_num, self.symbols, self.symbol_power, SNR)
+        samples = Samples(self.name, samples_num, self.symbols, self.symbol_power)
         return samples
 
     # Calculates advised bounds in the I/Q plane
