@@ -155,7 +155,7 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
 
 
 # === Enhanced Grayscale and RGB Image Generation - Section III-C&D ===
-def enhancedImgGenCUDA(symbols, i_range, q_range, img_resolution, filename, channels, power, decay, global_norm=False):
+def enhancedImgGenCUDABATCH(symbols, i_range, q_range, img_resolution, filename, channels, power, decay, n_images, global_norm=False):
     """
     Generates Enhanced Grayscale and RGB Images from complex I/Q samples using exponential decay.
 
@@ -175,6 +175,8 @@ def enhancedImgGenCUDA(symbols, i_range, q_range, img_resolution, filename, chan
 
     # Number of final samples
     samples_num = len(x_samples)
+    samples_per_image = samples_num // n_images
+    samples_to_keep = n_images * samples_per_image
 
     # Add channel number to dimensions if dimensions > 1
     if channels > 1:
@@ -184,29 +186,29 @@ def enhancedImgGenCUDA(symbols, i_range, q_range, img_resolution, filename, chan
 
     # Calculate pixel centroids in continuous x,y plane
     x_centroids = cp.arange(start=0.5, stop=img_resolution[0], step=1, dtype='float32').reshape(
-        (img_resolution[0], 1, 1, 1))
+        (1, img_resolution[0], 1, 1, 1))
     y_centroids = cp.arange(start=0.5, stop=img_resolution[1], step=1, dtype='float32').reshape(
-        (1, img_resolution[1], 1, 1))
+        (1, 1, img_resolution[1], 1, 1))
 
-    x_samples = cp.array(x_samples, dtype='float32').reshape((1, 1, 1, samples_num))
-    y_samples = cp.array(y_samples, dtype='float32').reshape((1, 1, 1, samples_num))
+    x_samples = cp.array(x_samples[:samples_to_keep], dtype='float32').reshape((n_images, 1, 1, 1, samples_per_image))
+    y_samples = cp.array(y_samples[:samples_to_keep], dtype='float32').reshape((n_images, 1, 1, 1, samples_per_image))
 
-    decay = cp.array(decay, dtype='float32').reshape((1, 1, channels, 1))
-    power = cp.array(power, dtype='float32').reshape((1, 1, channels, 1))
+    decay = cp.array(decay, dtype='float32').reshape((1, 1, 1, channels, 1))
+    power = cp.array(power, dtype='float32').reshape((1, 1, 1, channels, 1))
 
     pg = cp.ElementwiseKernel('float32 x, float32 x_c, float32 y, float32 y_c, float32 decay, float32 power',
                               'float32 z',
                               'z = power / exp(decay * sqrt((x - x_c) * (x - x_c) + (y - y_c) * (y - y_c)))',
                               'dist')
 
-    powergrid = cp.empty((img_resolution[0], img_resolution[1], channels, samples_num), dtype='float32')
+    powergrid = cp.empty((n_images, img_resolution[0], img_resolution[1], channels, samples_per_image), dtype='float32')
     pg(x_samples, x_centroids, y_samples, y_centroids, decay, power, powergrid)
     power_grid = cp.asnumpy(cp.sum(powergrid, axis=4))
 
     # Normalize Grid Array to 255 (8-bit pixel value)
     if not global_norm:
         # Normalize on a global basis
-        normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1)).reshape((1, 1, channels))) * 255
+        normalized_grid = (power_grid / np.max(power_grid, axis=(0, 1, 2)).reshape((1, 1, 1, channels))) * 255
     else:
         # Normalize on a per channel basis
         normalized_grid = (power_grid / np.max(power_grid)) * 255
@@ -218,11 +220,16 @@ def enhancedImgGenCUDA(symbols, i_range, q_range, img_resolution, filename, chan
     if channels == 1:
         img = Image.fromarray(img_grid, mode='L')
     elif channels == 3:
-        img = Image.fromarray(img_grid, mode='RGB')
+        for i in range(n_images):
+            img = Image.fromarray(img_grid[i], mode='RGB')
+            try:
+                img.save('{}_{}'.format(i, filename))
+            except NameError:
+                print("Only single and 3-channel images supported")
     # Show Image
     # img.show()
     # Permanently Save Image
-    try:
-        img.save(filename)
-    except NameError:
-        print("Only single and 3-channel images supported")
+    # try:
+    #     img.save(filename)
+    # except NameError:
+    #     print("Only single and 3-channel images supported")
