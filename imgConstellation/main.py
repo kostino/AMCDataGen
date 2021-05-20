@@ -26,7 +26,7 @@ sixteenQAM.plot()
 print(threeAPSK.symbols)
 threeAPSK.plot()
 
-samplesAPSK = threeAPSK.sampleGenerator(1000, SNR=10).samples
+samplesAPSK = threeAPSK.sampleGenerator(1000).awgn(SNR=10).samples
 IQplot(samplesAPSK)
 
 # Generate Grayscale, Enhanced Grayscale and RGB images from a 3 ring APSK constellation
@@ -64,8 +64,8 @@ for snr in (0, 5, 10, 15):
             os.makedirs("val_data/{}_db/{}/".format(snr, modulation.name))
             for batch in range(batches):
                 # print(batch)
-                # Generate samples
-                samples = modulation.sampleGenerator(samples_num=1000, SNR=snr)
+                # Generate samples and apply AWGN
+                samples = modulation.sampleGenerator(samples_num=1000).awgn(SNR=snr)
                 samples.enhancedRGB(img_resolution=img_resolution,
                                     filename="val_data/{}_db/{}/{}.png".format(snr, modulation.name, batch))
         else:
@@ -75,4 +75,4 @@ for snr in (0, 5, 10, 15):
 
 # New simplified way of creating images
 
-sixteenPSK.sampleGenerator(1000, SNR=10).enhancedRGB((200, 200), "psk_rgb.png")
+sixteenPSK.sampleGenerator(1000).awgn(SNR=10).enhancedRGB((200, 200), "psk_rgb.png")

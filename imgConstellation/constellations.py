@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from samples import Samples
 
+
 # === Constellations ===
 
 class Constellation:
@@ -55,14 +56,13 @@ class Constellation:
         plt.show()
 
     # Generate Samples and applies AWGN. SNR is in db
-    def sampleGenerator(self, samples_num, SNR=None):
+    def sampleGenerator(self, samples_num):
         '''
         Generates random samples from the constellation by sampling a discrete uniform distribution
         :param samples_num: Number of samples to be generated
-        :param SNR: Signal to Noise Ratio in dB to apply Additive White Gaussian Noise (optional)
         :return: Array of complex constellation samples
         '''
-        samples = Samples(self.name, samples_num, self.symbols, self.symbol_power, SNR)
+        samples = Samples(self.name, samples_num, self.symbols, self.symbol_power)
         return samples
 
     # Calculates advised bounds in the I/Q plane
@@ -83,7 +83,7 @@ class Constellation:
         # Calculate N0 and extend boundaries by stds_nums * np.sqrt(N0/2)
         # Setting strds_nums=2 should contain ~90% of samples from symbols near the edges
         if SNR is not None:
-            gamma = np.power(10, SNR/10)
+            gamma = np.power(10, SNR / 10)
             N0 = self.symbol_power / gamma
             max_range += stds_num * np.sqrt(N0 / 2)
 
@@ -121,7 +121,7 @@ class PSK(Constellation):
 
     def __init__(self, name, symbols_num, radius, angle_offset):
         # Find symbol power first
-        symbol_power = radius**2
+        symbol_power = radius ** 2
         # Call parent constructor
         super().__init__(name, symbols_num, symbol_power)
         # Symbol Ring Radius
@@ -161,7 +161,7 @@ class APSK(Constellation):
     def __init__(self, name, rings, symbols_num, radii, angle_offsets):
         # Call parent constructor
         n = sum(symbols_num)
-        p = np.array(symbols_num)/n
+        p = np.array(symbols_num) / n
         symbol_power = np.sum(np.power(np.array(radii), 2) * p)
         super().__init__(name, np.sum(symbols_num), symbol_power)
         # Number of rings
@@ -187,7 +187,7 @@ class QAM(Constellation):
         # Call parent constructor
         super().__init__(name, symbols_num, symbol_power)
         m = np.sqrt(symbols_num).astype(int)
-        sum_term = m**2 * (m**2-1) / 6  # CORRECT EXPRESSION
+        sum_term = m ** 2 * (m ** 2 - 1) / 6  # CORRECT EXPRESSION
         d_min = np.sqrt(symbols_num * symbol_power / sum_term)  # calculate dmin from avg symbol power
         # Constellation offset
         self.angle_offset = angle_offset
@@ -199,8 +199,8 @@ class QAM(Constellation):
         nGray = np.reshape(a, symbols_num)  # reshape to 1xM - Gray code walk on KMap
         inputGray = n
         (x, y) = np.divmod(inputGray, D)  # element-wise quotient and remainder
-        Ax = d_min * x + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - real axis
-        Ay = d_min * y + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - imag axis
+        Ax = d_min * x + d_min / 2 * (1 - D)  # PAM Amplitudes 2d+1-D - real axis
+        Ay = d_min * y + d_min / 2 * (1 - D)  # PAM Amplitudes 2d+1-D - imag axis
         self.symbols = Ax + 1j * Ay
         # apply angle offset
         self.symbols = self.symbols * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
@@ -214,11 +214,11 @@ class PAM(Constellation):
         super().__init__(name, symbols_num, symbol_power)
         # Constellation offset
         self.angle_offset = angle_offset
-        egPAM = 3 * symbol_power / (symbols_num**2 - 1)
+        egPAM = 3 * symbol_power / (symbols_num ** 2 - 1)
         d_min = 2 * np.sqrt(egPAM)
         n = np.arange(0, symbols_num)  # Sequential address from 0 to M-1 (1xM dimension)
         D = symbols_num
-        Ax = d_min * n + d_min/2*(1 - D)  # PAM Amplitudes 2d+1-D - real axis
+        Ax = d_min * n + d_min / 2 * (1 - D)  # PAM Amplitudes 2d+1-D - real axis
         Ay = 0  # PAM Amplitudes 0 - imag axis
         # apply angle offset
         self.symbols = (Ax + 1j * Ay) * (np.cos(angle_offset) + 1j * np.sin(angle_offset))
