@@ -56,7 +56,7 @@ img_resolution = (224, 224)
 
 # Iterate over Modulation Schemes
 for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
-    os.makedirs("val_data/{}".format(modulation))
+    os.makedirs("val_data/{}".format(modulation.name))
     # Iterate over SNRs
     for snr in (0, 5, 10, 15):
         print("Starting {}dB for modulation {}".format(snr, modulation.name))
