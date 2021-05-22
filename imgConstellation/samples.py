@@ -73,6 +73,8 @@ class Samples:
         self.irange = (-scale, scale)
         self.qrange = (-scale, scale)
 
+        return self
+
     def freqOffset(self, sample_freq=None, offset_freq=None, degrees=None):
         """
         Simulates a frequency offset between transmitter and receiver. Enter either sample_freq with offset_freq or just

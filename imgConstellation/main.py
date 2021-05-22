@@ -26,8 +26,8 @@ sixteenQAM.plot()
 print(threeAPSK.symbols)
 threeAPSK.plot()
 
-samplesAPSK = threeAPSK.sampleGenerator(1000).awgn(SNR=10).samples
-IQplot(samplesAPSK)
+samplesAPSK = threeAPSK.sampleGenerator(1000).awgn(SNR=10)
+samplesAPSK.plot()
 
 # Generate Grayscale, Enhanced Grayscale and RGB images from a 3 ring APSK constellation
 grayscaleImgGen(samplesAPSK, (-7, 7), (-7, 7), (200, 200), "constellation_gray.png")
@@ -54,25 +54,19 @@ sixtyfour_APSK = APSK("64APSK", 4, (8, 16, 20, 20), (0.3, 0.6, 0.9, 1.2), (0, 0,
 batches = 1000
 img_resolution = (224, 224)
 
-# Iterate over SNRs
-for snr in (0, 5, 10, 15):
-    # Iterate over Modulation Schemes
-    os.makedirs("val_data/{}_db".format(snr))
-    for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
-        print("Starting modulation {} for {}dB".format(modulation.name, snr))
-        if modulation.name not in os.listdir("val_data/{}_db".format(snr)):
-            os.makedirs("val_data/{}_db/{}/".format(snr, modulation.name))
+# Iterate over Modulation Schemes
+for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
+    os.makedirs("val_data/{}".format(modulation))
+    # Iterate over SNRs
+    for snr in (0, 5, 10, 15):
+        print("Starting {}dB for modulation {}".format(snr, modulation.name))
+        if snr not in os.listdir("val_data/{}".format(modulation.name)):
+            os.makedirs("val_data/{}/{}_db/".format(modulation.name, snr))
             for batch in range(batches):
                 # print(batch)
                 # Generate samples and apply AWGN
                 samples = modulation.sampleGenerator(samples_num=1000).awgn(SNR=snr)
                 samples.enhancedRGB(img_resolution=img_resolution,
-                                    filename="val_data/{}_db/{}/{}.png".format(snr, modulation.name, batch))
+                                    filename="val_data/{}/{}_db/{}.png".format(modulation.name, snr, batch))
         else:
-            print("Skipping modulation {} for {}dB. Already completed".format(modulation.name, snr))
-
-
-
-# New simplified way of creating images
-
-sixteenPSK.sampleGenerator(1000).awgn(SNR=10).enhancedRGB((200, 200), "psk_rgb.png")
+            print("Skipping {}dB for modulation {}. Already completed".format(modulation.name, snr))
