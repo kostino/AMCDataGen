@@ -3,7 +3,7 @@ import time
 import numpy as np
 import cupy as cp
 import numexpr as ne
-from cupyx import optimizing
+#from cupyx import optimizing
 
 fourPAM = PAM("4-PAM", 4, 1, 0)
 image_ns = [1, 2, 3, 5, 10, 12]
@@ -13,8 +13,8 @@ for image_n in image_ns:
     print("IMAGES: {}".format(image_n))
     samplesCPU = []
     for i in range(image_n):
-        samplesCPU.append(fourPAM.sampleGenerator(1000, SNR=10))
-    samples = fourPAM.sampleGenerator(1000*image_n, SNR=10)
+        samplesCPU.append(fourPAM.sampleGenerator(1000).awgn(SNR=10))
+    samples = fourPAM.sampleGenerator(1000*image_n).awgn(SNR=10)
 
 
     start_time = time.time()
@@ -31,5 +31,7 @@ for image_n in image_ns:
 
 speedup = np.array(numexpr_times) / np.array(cupy_times)
 print(speedup)
+print(numexpr_times)
+print(cupy_times)
 plt.plot(image_ns, speedup)
 plt.show()

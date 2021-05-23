@@ -170,6 +170,7 @@ def enhancedImgGenCUDABATCH(symbols, i_range, q_range, img_resolution, filename,
     :param global_norm: Whether to normalize the image pixels on a global-across all channels or on a per-channel basis
     :return:
     """
+    filename = filename.replace(".png","",1)
     # Transform I/Q samples to XY plane
     x_samples, y_samples = IQtoXY(symbols, i_range, q_range, img_resolution)
 
@@ -223,7 +224,7 @@ def enhancedImgGenCUDABATCH(symbols, i_range, q_range, img_resolution, filename,
         for i in range(n_images):
             img = Image.fromarray(img_grid[i], mode='RGB')
             try:
-                img.save('{}_{}'.format(i, filename))
+                img.save('{}_{}.png'.format(filename, i))
             except NameError:
                 print("Only single and 3-channel images supported")
     # Show Image
