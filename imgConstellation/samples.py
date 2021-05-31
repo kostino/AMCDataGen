@@ -92,7 +92,6 @@ class Samples:
         elif degrees is not None:
             self.samples = self.samples * np.exp(1j*2*np.pi*degrees)
 
-
     """ Plotting functions """
     def plot(self):
         """
@@ -102,6 +101,25 @@ class Samples:
         plt.figure(figsize=(5, 5))
         plt.scatter(self.samples.real, self.samples.imag)
         plt.show()
+
+    """ Data I/O functions """
+    def saveSamples(self, filename):
+        """
+        Saves the raw I/Q samples to a binary file
+        :param filename: File name to save the samples
+        :return:
+        """
+        self.samples.tofile(filename)
+        return self
+
+    def loadSamples(self, filename):
+        """
+        Loads raw I/Q samples from a binary file
+        :param filename: File name to load the samples
+        :return:
+        """
+        self.samples = np.fromfile(filename, np.complex128)
+        return self
 
     """ Image generation functions """
     def grayscale(self, img_resolution, filename, bounds=None):

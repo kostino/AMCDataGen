@@ -59,17 +59,22 @@ iter_size = size // batch_size
 # Iterate over Modulation Schemes
 for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
     os.makedirs("data/{}".format(modulation.name))
+    os.makedirs("data_iq/{}".format(modulation.name))
     # Iterate over SNRs
     for snr in (0, 5, 10, 15):
         print("Starting {}dB for modulation {}".format(snr, modulation.name))
         if snr not in os.listdir("data/{}".format(modulation.name)):
             os.makedirs("data/{}/{}_db/".format(modulation.name, snr))
+            os.makedirs("data_iq/{}/{}_db/".format(modulation.name, snr))
             for iteration in range(iter_size):
                 # Generate samples and apply AWGN
                 samples = modulation.sampleGenerator(samples_num=1000*batch_size).awgn(SNR=snr)
+                # Generate image
                 samples.enhancedRGBCUDABATCH(img_resolution=img_resolution,
                                     filename="data/{}/{}_db/{}.png".format(modulation.name, snr, iteration),
                                     n_images=batch_size, bounds=((-3.5, 3.5), (-3.5, 3.5)))
+                # Save raw I/Q samples to binary file
+                samples.saveSamples(filename="data_iq/{}/{}_db/{}.iq".format(modulation.name, snr, iteration))
             os.system('zip -r {}_{}_db.zip ./data/{}/{}_db'.format(modulation.name, snr, modulation.name, snr))
         else:
             print("Skipping {}dB for modulation {}. Already completed".format(modulation.name, snr))
