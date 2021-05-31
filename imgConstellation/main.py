@@ -41,7 +41,9 @@ from PIL import Image
 #                (2000, 2000, 2000), (0.4, 0.3, 0.2))
 # print(time.time() - start_time)
 
-# Dataset 1 Generation
+# Dataset Generation
+data_root = 'dataset2_static'
+data_root_iq = 'dataset2_static_iq'
 QPSK = PSK("QPSK", 4, 1, 0)
 eight_PSK = PSK("8PSK", 8, 1, 0)
 sixteen_QAM = QAM("16QAM", 16, 1, 0)
@@ -58,23 +60,22 @@ iter_size = size // batch_size
 
 # Iterate over Modulation Schemes
 for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
-    os.makedirs("data/{}".format(modulation.name))
-    os.makedirs("data_iq/{}".format(modulation.name))
+    os.makedirs("{}/{}".format(data_root, modulation.name))
+    os.makedirs("{}/{}".format(data_root_iq, modulation.name))
     # Iterate over SNRs
     for snr in (0, 5, 10, 15):
         print("Starting {}dB for modulation {}".format(snr, modulation.name))
-        if snr not in os.listdir("data/{}".format(modulation.name)):
-            os.makedirs("data/{}/{}_db/".format(modulation.name, snr))
-            os.makedirs("data_iq/{}/{}_db/".format(modulation.name, snr))
+        if snr not in os.listdir("{}/{}".format(data_root, modulation.name)):
+            os.makedirs("{}/{}/{}_db/".format(data_root, modulation.name, snr))
+            os.makedirs("{}/{}/{}_db/".format(data_root_iq, modulation.name, snr))
             for iteration in range(iter_size):
                 # Generate samples and apply AWGN
                 samples = modulation.sampleGenerator(samples_num=1000*batch_size).awgn(SNR=snr)
                 # Generate image
                 samples.enhancedRGBCUDABATCH(img_resolution=img_resolution,
-                                    filename="data/{}/{}_db/{}.png".format(modulation.name, snr, iteration),
+                                    filename="{}/{}/{}_db/{}.png".format(data_root, modulation.name, snr, iteration),
                                     n_images=batch_size, bounds=((-3.5, 3.5), (-3.5, 3.5)))
                 # Save raw I/Q samples to binary file
-                samples.saveSamples(filename="data_iq/{}/{}_db/{}.iq".format(modulation.name, snr, iteration))
-            os.system('zip -r {}_{}_db.zip ./data/{}/{}_db'.format(modulation.name, snr, modulation.name, snr))
+                samples.saveSamples(filename="{}/{}/{}_db/{}.iq".format(data_root_iq, modulation.name, snr, iteration))
         else:
             print("Skipping {}dB for modulation {}. Already completed".format(modulation.name, snr))
