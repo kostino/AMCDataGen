@@ -75,23 +75,6 @@ class Samples:
 
         return self
 
-    def freqOffset(self, sample_freq=None, offset_freq=None, degrees=None):
-        """
-        Simulates a frequency offset between transmitter and receiver. Enter either sample_freq with offset_freq or just
-        degrees.
-        :param sample_freq: Base transmitter and receiver frequency in Hz
-        :param offset_freq: Frequency offset between transmitter and receiver in Hz
-        :param degrees: Degrees of rotation / phase offset to apply
-        :return:
-        """
-
-        # Using sampling frequency and offset frequency
-        if (sample_freq is not None) and (offset_freq is not None):
-            self.samples = self.samples * np.exp(1j*2*np.pi*(offset_freq/sample_freq))
-        # Using degrees
-        elif degrees is not None:
-            self.samples = self.samples * np.exp(1j*2*np.pi*degrees)
-
     """ Plotting functions """
     def plot(self):
         """
