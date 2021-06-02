@@ -165,6 +165,16 @@ class Samples:
         self.samples = np.fromfile(filename, np.complex128)
         return self
 
+    def saveCumulants(self, filename):
+        """
+        Saves the cumulants to a binary file
+        :param filename: File name to save the samples
+        :return:
+        """
+        cum_array = np.array([item for key, item in self.signal_cumulants])
+        cum_array.tofile(filename)
+        return self
+
     """ Image generation functions """
     def grayscale(self, img_resolution, filename, bounds=None):
         if bounds is not None:

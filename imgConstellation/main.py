@@ -44,6 +44,7 @@ from PIL import Image
 # Dataset Generation
 data_root = 'dataset2_static'
 data_root_iq = 'dataset2_static_iq'
+data_root_sig_cum = 'dataset2_static_sig_cum'
 QPSK = PSK("QPSK", 4, 1, 0)
 eight_PSK = PSK("8PSK", 8, 1, 0)
 sixteen_QAM = QAM("16QAM", 16, 1, 0)
@@ -62,12 +63,14 @@ iter_size = size // batch_size
 for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixteen_PAM, sixteen_APSK, sixtyfour_APSK):
     os.makedirs("{}/{}".format(data_root, modulation.name))
     os.makedirs("{}/{}".format(data_root_iq, modulation.name))
+    os.makedirs("{}/{}".format(data_root_sig_cum, modulation.name))
     # Iterate over SNRs
     for snr in (0, 5, 10, 15):
         print("Starting {}dB for modulation {}".format(snr, modulation.name))
         if snr not in os.listdir("{}/{}".format(data_root, modulation.name)):
             os.makedirs("{}/{}/{}_db/".format(data_root, modulation.name, snr))
             os.makedirs("{}/{}/{}_db/".format(data_root_iq, modulation.name, snr))
+            os.makedirs("{}/{}/{}_db/".format(data_root_sig_cum, modulation.name, snr))
             for iteration in range(iter_size):
                 # Generate samples and apply AWGN
                 samples = modulation.sampleGenerator(samples_num=1000*batch_size).awgn(SNR=snr)
@@ -77,5 +80,7 @@ for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixtee
                                     n_images=batch_size, bounds=((-3.5, 3.5), (-3.5, 3.5)))
                 # Save raw I/Q samples to binary file
                 samples.saveSamples(filename="{}/{}/{}_db/{}.iq".format(data_root_iq, modulation.name, snr, iteration))
+                # Calculate and save cumulants
+                samples.calculateCumulants().saveCumulants(filename="{}/{}/{}_db/{}.cum".format(data_root_sig_cum, modulation.name, snr, iteration))
         else:
             print("Skipping {}dB for modulation {}. Already completed".format(modulation.name, snr))
