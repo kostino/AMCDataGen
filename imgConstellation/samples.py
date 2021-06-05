@@ -131,9 +131,9 @@ class Samples:
             irange = self.irange
             qrange = self.qrange
 
-        if decay is None or power is None:
+        if decay is None:
             decay = (0.4, 0.3, 0.2)
-            power = (100, 80, 60)
+        power = (100, 80, 60)
 
         imgGen.enhancedImgGen(self.samples, irange, qrange, img_resolution, filename, 3, power, decay, global_norm)
 
@@ -144,8 +144,8 @@ class Samples:
             irange = self.irange
             qrange = self.qrange
 
-        if decay is None or power is None:
+        if decay is None:
             decay = (0.4, 0.3, 0.2)
-            power = (100, 80, 60)
+        power = (100, 80, 60)
 
         imgGen.enhancedImgGenCUDABATCH(self.samples, irange, qrange, img_resolution, filename, 3, power, decay, n_images, global_norm)
