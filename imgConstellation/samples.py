@@ -171,7 +171,7 @@ class Samples:
         :param filename: File name to save the samples
         :return:
         """
-        cum_array = np.array([item for key, item in self.signal_cumulants])
+        cum_array = np.array([item for key, item in self.signal_cumulants.items()])
         cum_array.tofile(filename)
         return self
 
