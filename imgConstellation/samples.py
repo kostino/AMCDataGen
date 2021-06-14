@@ -65,7 +65,19 @@ class Samples:
         :return: M_pq
         """
         conj = np.conjugate(self.samples)
-        return np.mean(np.power(self.samples, p-q) * np.power(conj, q))
+        return np.mean(np.power(self.samples, p - q) * np.power(conj, q))
+
+    def calculateMomentBATCH(self, p, q, batch_size, i):
+        """
+        Return moment M_p,q
+        :param p: Parameter p
+        :param q: Parameter q
+        :return: M_pq
+        """
+        l = len(self.samples) // batch_size
+        sam = self.samples[(i*l):((i+1)*l-1)]
+        conj = np.conjugate(sam)
+        return np.mean(np.power(sam, p - q) * np.power(conj, q))
 
     def calculateMoments(self):
         # # Amplitude & Phase
@@ -74,8 +86,21 @@ class Samples:
         #
         # self.amp_moments = {"M{}0".format(i): stats.moment(amp, i) for i in range(start=1, stop=7, step=1)}
         # self.phase_moments = {"M{}0".format(i): stats.moment(phase, i) for i in range(start=1, stop=7, step=1)}
-        self.signal_moments = {"M{}{}".format(p,q): self.calculateMoment(p, q) for p in range(2, 7)
+        self.signal_moments = {"M{}{}".format(p, q): self.calculateMoment(p, q) for p in range(2, 7)
                                for q in range(0, 4) if q <= p}
+        return self
+
+    def calculateMomentsBATCH(self, batch_size):
+        # # Amplitude & Phase
+        # amp = np.abs(self.samples)
+        # phase = np.angle(self.samples)
+        #
+        # self.amp_moments = {"M{}0".format(i): stats.moment(amp, i) for i in range(start=1, stop=7, step=1)}
+        # self.phase_moments = {"M{}0".format(i): stats.moment(phase, i) for i in range(start=1, stop=7, step=1)}
+        self.signal_moments = []
+        for i in range(batch_size):
+            self.signal_moments.append( {"M{}{}".format(p, q): self.calculateMomentBATCH(p, q, batch_size, i) for p in range(2, 7)
+                                    for q in range(0, 4) if q <= p})
         return self
 
     def calculateCumulants(self):
@@ -91,26 +116,71 @@ class Samples:
                                        - 3 * self.signal_moments["M20"] * self.signal_moments["M21"]
         self.signal_cumulants["C42"] = self.signal_moments["M42"] - np.power(np.abs(self.signal_moments["M20"]), 2) \
                                        - 2 * np.power(self.signal_moments["M21"], 2)
-        self.signal_cumulants["C60"] = self.signal_moments["M60"] - 15 * self.signal_moments["M20"] * self.signal_moments["M40"] \
+        self.signal_cumulants["C60"] = self.signal_moments["M60"] - 15 * self.signal_moments["M20"] * \
+                                       self.signal_moments["M40"] \
                                        + 3 * np.power(self.signal_moments["M20"], 3)
-        self.signal_cumulants["C61"] = self.signal_moments["M61"] - 5 * self.signal_moments["M21"] * self.signal_moments["M40"] \
+        self.signal_cumulants["C61"] = self.signal_moments["M61"] - 5 * self.signal_moments["M21"] * \
+                                       self.signal_moments["M40"] \
                                        - 10 * self.signal_moments["M20"] * self.signal_moments["M41"] \
                                        + 30 * np.power(self.signal_moments["M20"], 2) * self.signal_moments["M21"]
-        self.signal_cumulants["C62"] = self.signal_moments["M62"] - 6 * self.signal_moments["M20"] * self.signal_moments["M42"] \
+        self.signal_cumulants["C62"] = self.signal_moments["M62"] - 6 * self.signal_moments["M20"] * \
+                                       self.signal_moments["M42"] \
                                        - 8 * self.signal_moments["M21"] * self.signal_moments["M41"] \
                                        - self.signal_moments["M22"] * self.signal_moments["M40"] \
                                        + 6 * np.power(self.signal_moments["M20"], 2) * self.signal_moments["M22"] \
                                        + 24 * np.power(self.signal_moments["M21"], 2) * self.signal_moments["M20"]
-        self.signal_cumulants["C63"] = self.signal_moments["M63"] - 9 * self.signal_moments["M21"] * self.signal_moments["M42"] \
+        self.signal_cumulants["C63"] = self.signal_moments["M63"] - 9 * self.signal_moments["M21"] * \
+                                       self.signal_moments["M42"] \
                                        + 12 * np.power(self.signal_moments["M21"], 3) \
                                        - 3 * self.signal_moments["M20"] * self.signal_moments["M43"] \
-                                       - 3 * self.signal_moments["M22"] * self.signal_moments["M41"]  \
-                                       + 18 * self.signal_moments["M20"] * self.signal_moments["M21"] * self.signal_moments["M22"]
+                                       - 3 * self.signal_moments["M22"] * self.signal_moments["M41"] \
+                                       + 18 * self.signal_moments["M20"] * self.signal_moments["M21"] * \
+                                       self.signal_moments["M22"]
 
         return self
 
 
+    def calculateCumulantsBATCH(self, batch_size):
+        # Call moments calculation
+        self.calculateMomentsBATCH(batch_size)
+        self.signal_cumulants=[]
+        for i in range(batch_size):
+            # Calculate Signal Cumulants
+            cum = {}
+            mom = self.signal_moments[i]
+            cum["C20"] = mom["M20"]
+            cum["C21"] = mom["M21"]
+            cum["C40"] = mom["M40"] - 3 * np.power(mom["M20"], 2)
+            cum["C41"] = mom["M41"] \
+                                           - 3 * mom["M20"] * mom["M21"]
+            cum["C42"] = mom["M42"] - np.power(np.abs(mom["M20"]), 2) \
+                                           - 2 * np.power(mom["M21"], 2)
+            cum["C60"] = mom["M60"] - 15 * mom["M20"] * \
+                                           mom["M40"] \
+                                           + 3 * np.power(mom["M20"], 3)
+            cum["C61"] = mom["M61"] - 5 * mom["M21"] * \
+                                           mom["M40"] \
+                                           - 10 * mom["M20"] * mom["M41"] \
+                                           + 30 * np.power(mom["M20"], 2) * mom["M21"]
+            cum["C62"] = mom["M62"] - 6 * mom["M20"] * \
+                                           mom["M42"] \
+                                           - 8 * mom["M21"] * mom["M41"] \
+                                           - mom["M22"] * mom["M40"] \
+                                           + 6 * np.power(mom["M20"], 2) * mom["M22"] \
+                                           + 24 * np.power(mom["M21"], 2) * mom["M20"]
+            cum["C63"] = mom["M63"] - 9 * mom["M21"] * \
+                                           mom["M42"] \
+                                           + 12 * np.power(mom["M21"], 3) \
+                                           - 3 * mom["M20"] * mom["M43"] \
+                                           - 3 * mom["M22"] * mom["M41"] \
+                                           + 18 * mom["M20"] * mom["M21"] * \
+                                           mom["M22"]
+            self.signal_cumulants.append(cum)
+
+        return self
+
     """ Channel Impairments functions """
+
     def awgn(self, SNR):
         """
         Applies Additive White Gaussian Noise to samples for a given Signal to Noise Ratio (SNR)
@@ -137,6 +207,7 @@ class Samples:
         return self
 
     """ Plotting functions """
+
     def plot(self):
         """
         Plots the constellation
@@ -147,6 +218,7 @@ class Samples:
         plt.show()
 
     """ Data I/O functions """
+
     def saveSamples(self, filename):
         """
         Saves the raw I/Q samples to a binary file
@@ -154,6 +226,19 @@ class Samples:
         :return:
         """
         self.samples.tofile(filename)
+        return self
+
+    def saveSamplesBATCH(self, filename, batch_size):
+        """
+        Saves the raw I/Q samples to a binary file
+        :param filename: File name to save the samples
+        :return:
+        """
+        f = filename.split('.iq')[0]
+        l = len(self.samples) // batch_size
+        for i in range(batch_size):
+            i_sam = self.samples[(i * l):((i+1) * l - 1)]
+            i_sam.tofile("{}_{}.iq".format(f, i))
         return self
 
     def loadSamples(self, filename):
@@ -171,11 +256,25 @@ class Samples:
         :param filename: File name to save the samples
         :return:
         """
-        cum_array = np.array([item for key, item in self.signal_cumulants])
+        cum_array = np.array([item for key, item in self.signal_cumulants.items()])
         cum_array.tofile(filename)
         return self
 
+    def saveCumulantsBATCH(self, filename):
+        """
+        Saves the cumulants to a binary file
+        :param filename: File name to save the samples
+        :return:
+        """
+        f = filename.split('.cum')[0]
+        for index, cum in enumerate(self.signal_cumulants):
+
+            cum_array = np.array([item for key, item in cum.items()])
+            cum_array.tofile("{}_{}.cum".format(f, index))
+        return self
+
     """ Image generation functions """
+
     def grayscale(self, img_resolution, filename, bounds=None):
         if bounds is not None:
             (irange, qrange) = bounds
@@ -209,7 +308,8 @@ class Samples:
 
         imgGen.enhancedImgGen(self.samples, irange, qrange, img_resolution, filename, 3, power, decay, global_norm)
 
-    def enhancedRGBCUDABATCH(self, img_resolution, filename, bounds=None, decay=None, power=None, n_images=1, global_norm=False):
+    def enhancedRGBCUDABATCH(self, img_resolution, filename, bounds=None, decay=None, power=None, n_images=1,
+                             global_norm=False):
         if bounds is not None:
             (irange, qrange) = bounds
         else:
@@ -220,4 +320,5 @@ class Samples:
             decay = (0.4, 0.3, 0.2)
         power = (100, 80, 60)
 
-        imgGen.enhancedImgGenCUDABATCH(self.samples, irange, qrange, img_resolution, filename, 3, power, decay, n_images, global_norm)
+        imgGen.enhancedImgGenCUDABATCH(self.samples, irange, qrange, img_resolution, filename, 3, power, decay,
+                                       n_images, global_norm)

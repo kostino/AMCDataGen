@@ -42,9 +42,9 @@ from PIL import Image
 # print(time.time() - start_time)
 
 # Dataset Generation
-data_root = 'dataset2_static'
-data_root_iq = 'dataset2_static_iq'
-data_root_sig_cum = 'dataset2_static_sig_cum'
+data_root = 'dataset5'
+data_root_iq = 'dataset5_iq'
+data_root_sig_cum = 'dataset5_cum'
 QPSK = PSK("QPSK", 4, 1, 0)
 eight_PSK = PSK("8PSK", 8, 1, 0)
 sixteen_QAM = QAM("16QAM", 16, 1, 0)
@@ -76,11 +76,11 @@ for modulation in (QPSK, eight_PSK, sixteen_QAM, sixtyfour_QAM, four_PAM, sixtee
                 samples = modulation.sampleGenerator(samples_num=1000*batch_size).awgn(SNR=snr)
                 # Generate image
                 samples.enhancedRGBCUDABATCH(img_resolution=img_resolution,
-                                    filename="{}/{}/{}_db/{}.png".format(data_root, modulation.name, snr, iteration),
-                                    n_images=batch_size, bounds=((-3.5, 3.5), (-3.5, 3.5)))
+                                     filename="{}/{}/{}_db/{}.png".format(data_root, modulation.name, snr, iteration),
+                                     n_images=batch_size, decay=(0.4,0.2,0.1))
                 # Save raw I/Q samples to binary file
-                samples.saveSamples(filename="{}/{}/{}_db/{}.iq".format(data_root_iq, modulation.name, snr, iteration))
+                samples.saveSamplesBATCH(filename="{}/{}/{}_db/{}.iq".format(data_root_iq, modulation.name, snr, iteration), batch_size=batch_size)
                 # Calculate and save cumulants
-                samples.calculateCumulants().saveCumulants(filename="{}/{}/{}_db/{}.cum".format(data_root_sig_cum, modulation.name, snr, iteration))
+                samples.calculateCumulantsBATCH(batch_size=batch_size).saveCumulantsBATCH(filename="{}/{}/{}_db/{}.cum".format(data_root_sig_cum, modulation.name, snr, iteration))
         else:
             print("Skipping {}dB for modulation {}. Already completed".format(modulation.name, snr))
