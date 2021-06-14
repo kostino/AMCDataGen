@@ -142,7 +142,7 @@ def enhancedImgGen(symbols, i_range, q_range, img_resolution, filename, channels
     img_grid = normalized_grid.astype('uint8', casting='unsafe')
     # Generate grayscale image from grid array
     if channels == 1:
-        img = Image.fromarray(img_grid, mode='L')
+        img = Image.fromarray(img_grid[0], mode='L')
     elif channels == 3:
         img = Image.fromarray(img_grid, mode='RGB')
     # Show Image
