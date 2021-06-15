@@ -52,7 +52,7 @@ def parse_ds_entry(iq_samples, image, cumulants, snr, mod_idx):
     data = {
         'snr': _int64_feature(snr),
         'mod': _int64_feature(mod_idx),
-        'iq_samples': _bytes_feature(serialize_array(iq_samples)),
+        # 'iq_samples': _bytes_feature(serialize_array(iq_samples)),
         'raw_image': _bytes_feature(serialize_array(image)),
         'cumulants': _bytes_feature(serialize_array(cumulants)),
     }
@@ -78,13 +78,14 @@ if __name__ == '__main__':
                 # Iterate over number of examples per CUDA batch
                 for example_num in range(cuda_batch_size):
                     # Load image, cumulants and I/Q samples
-                    img = Image.open(f"{data_root}/{mod}/{snr}/{batch}_{example_num}.png")
-                    cumulants = np.fromfile(f"{data_root_sig_cum}/{mod}/{snr}/{batch}_{example_num}.cum", np.complex128)
-                    iq_samples = np.fromfile(f"{data_root_iq}/{mod}/{snr}/{batch}_{example_num}.iq", np.complex128)
+                    img = Image.open(f"{data_root}/{mod}/{snr}_db/{batch}_{example_num}.png")
+                    img = np.array(img)
+                    cumulants = np.fromfile(f"{data_root_sig_cum}/{mod}/{snr}_db/{batch}_{example_num}.cum", np.complex128)
+                    iq_samples = np.fromfile(f"{data_root_iq}/{mod}/{snr}_db/{batch}_{example_num}.iq", np.complex128)
 
                     # Convert complex IQ samples and cumulants arrays to float arrays: [samples.real, samples.imag]
-                    iq_samples_flt = np.concatenate(iq_samples.real, iq_samples.imag)
-                    cumulants_flt = np.concatenate(cumulants.real, cumulants.imag)
+                    iq_samples_flt = np.concatenate((iq_samples.real, iq_samples.imag))
+                    cumulants_flt = np.concatenate((cumulants.real, cumulants.imag))
 
                     # Create dictionary with Example information
                     example = parse_ds_entry(iq_samples_flt, img, cumulants_flt, snr, mod_idx)
