@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import os
 from PIL import Image
 
 # Dataset parameters
@@ -53,7 +54,7 @@ def parse_ds_entry(iq_samples, image, cumulants, snr, mod_idx):
     data = {
         'snr': _int64_feature(snr),
         'mod': _int64_feature(mod_idx),
-        'iq_samples': _bytes_feature(serialize_array(iq_samples)),
+        # 'iq_samples': _bytes_feature(serialize_array(iq_samples)),
         'raw_image': _bytes_feature(serialize_array(image)),
         'cumulants': _bytes_feature(serialize_array(cumulants)),
     }
@@ -61,6 +62,44 @@ def parse_ds_entry(iq_samples, image, cumulants, snr, mod_idx):
     out = tf.train.Example(features=tf.train.Features(feature=data))
 
     return out
+
+
+def parse_tfr_element(element):
+    # use the same structure as above; it's kinda an outline of the structure we now want to create
+    data = {
+        'snr': tf.io.FixedLenFeature([], tf.int64),
+        'mod': tf.io.FixedLenFeature([], tf.int64),
+        'raw_image': tf.io.FixedLenFeature([], tf.string),
+        'cumulants': tf.io.FixedLenFeature([], tf.string),
+    }
+
+    content = tf.io.parse_single_example(element, data)
+
+    snr = content['snr']
+    mod = content['mod']
+    cumulants = content['cumulants']
+    raw_image = content['raw_image']
+
+    # get our 'feature'-- our image -- and reshape it appropriately
+    img = tf.io.parse_tensor(raw_image, out_type=tf.string)
+    cumulants = tf.io.parse_tensor(cumulants, out_type=tf.float64)
+    # TODO: KEEP IMG DIMS IN TFRECORDS ENTRY
+    # img = tf.reshape(img, shape=img_resolution)
+    img = tf.io.decode_png(img, channels=3)
+    cumulants = tf.reshape(cumulants, shape=(18, 1))
+    return (img, cumulants, mod, snr)
+
+
+def get_dataset(filenames):
+    # create the dataset
+    dataset = tf.data.TFRecordDataset(filenames)
+
+    # pass every single feature through our mapping function
+    dataset = dataset.map(
+        parse_tfr_element
+    )
+
+    return dataset
 
 
 # Program Entry point
