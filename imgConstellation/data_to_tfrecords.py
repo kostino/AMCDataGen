@@ -14,6 +14,7 @@ img_mod_snr = 15000
 # Images per CUDA batch and number of batches
 cuda_batch_size = 5
 cuda_batches = img_mod_snr // cuda_batch_size
+shards_num = 20
 # SNRs
 snrs = [0, 5, 10, 15]
 snrs.sort()
@@ -64,34 +65,38 @@ def parse_ds_entry(iq_samples, image, cumulants, snr, mod_idx):
 
 # Program Entry point
 if __name__ == '__main__':
-    # Iterate over Modulation Schemes
-    for mod_idx, mod in enumerate(mod_schemes):
-        # Iterate over SNRs
-        for snr in snrs:
 
-            # For each Modulation-SNR combination open a new tfrecords shard
-            current_shard_name = "{}_{}.tfrecords".format(mod, snr)
-            writer = tf.io.TFRecordWriter(current_shard_name)
+    for shard_id in range(shards_num):
+        # Open a new tfrecords shard
+        current_shard_name = f"shard_{shard}.tfrecords"
+        writer = tf.io.TFRecordWriter(current_shard_name)
 
-            # Iterate over CUDA batches
-            for batch in range(cuda_batches):
-                # Iterate over number of examples per CUDA batch
-                for example_num in range(cuda_batch_size):
-                    # Load image, cumulants and I/Q samples
-                    img = Image.open(f"{data_root}/{mod}/{snr}/{batch}_{example_num}.png")
-                    cumulants = np.fromfile(f"{data_root_sig_cum}/{mod}/{snr}/{batch}_{example_num}.cum", np.complex128)
-                    iq_samples = np.fromfile(f"{data_root_iq}/{mod}/{snr}/{batch}_{example_num}.iq", np.complex128)
+        # Iterate over Modulation Schemes
+        for mod_idx, mod in enumerate(mod_schemes):
+            # Iterate over SNRs
+            for snr in snrs:
 
-                    # Convert complex IQ samples and cumulants arrays to float arrays: [samples.real, samples.imag]
-                    iq_samples_flt = np.concatenate(iq_samples.real, iq_samples.imag)
-                    cumulants_flt = np.concatenate(cumulants.real, cumulants.imag)
+                # Iterate over CUDA batches
+                for batch in range(cuda_batches):
+                    # Iterate over number of examples per CUDA batch
+                    for example_num in range(shard_id * cuda_batch_size//shards_num, (shard_id+1) * cuda_batch_size//shards_num):
+                        # Load image, cumulants and I/Q samples
+                        img = Image.open(f"{data_root}/{mod}/{snr}/{batch}_{example_num}.png")
+                        cumulants = np.fromfile(f"{data_root_sig_cum}/{mod}/{snr}/{batch}_{example_num}.cum", np.complex128)
+                        iq_samples = np.fromfile(f"{data_root_iq}/{mod}/{snr}/{batch}_{example_num}.iq", np.complex128)
 
-                    # Create dictionary with Example information
-                    example = parse_ds_entry(iq_samples_flt, img, cumulants_flt, snr, mod_idx)
+                        # Convert complex IQ samples and cumulants arrays to float arrays: [samples.real, samples.imag]
+                        iq_samples_flt = np.concatenate(iq_samples.real, iq_samples.imag)
+                        cumulants_flt = np.concatenate(cumulants.real, cumulants.imag)
 
-                    # Write Example to TFRecords shard
-                    writer.write(example.SerializeToString())
+                        # Create dictionary with Example information
+                        example = parse_ds_entry(iq_samples_flt, img, cumulants_flt, snr, mod_idx)
 
-            # Close writer
-            writer.close()
-            print(f"Finished {mod} - {snr}dB")
+                        # Write Example to TFRecords shard
+                        writer.write(example.SerializeToString())
+
+
+
+        # Close writer
+        writer.close()
+        print(f"Finished shard {shard_id}")
