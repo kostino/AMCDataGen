@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     for shard_id in range(shards_num):
         # Open a new tfrecords shard
-        current_shard_name = f"shard_{shard}.tfrecords"
+        current_shard_name = f"shard_{shard_id}.tfrecords"
         writer = tf.io.TFRecordWriter(current_shard_name)
 
         # Iterate over Modulation Schemes
