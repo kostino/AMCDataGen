@@ -46,6 +46,8 @@ class Samples:
         samples = symbols[indexes]
         self.samples = samples
 
+        """ This method used knowledge of the sample's modulation symbols which is not available in real environments.
+        Instead use the code with the heuristic bellow
         # Calculate maximum x or y distance of samples and set max_range variable
         x_max = np.max(np.abs(self.symbols.real))
         y_max = np.max(np.abs(self.symbols.imag))
@@ -56,6 +58,19 @@ class Samples:
         scale = offset + self.max_range
         self.irange = (-scale, scale)
         self.qrange = (-scale, scale)
+        """
+
+        # Use 98th percentile of absolute of each dimension to determine the maximum absolute range
+        x_max = (np.sort(np.abs(self.samples.real)))[0.98 * samples_num - 1]
+        y_max = (np.sort(np.abs(self.samples.imag)))[0.98 * samples_num - 1]
+        max_dim = np.max(x_max, y_max)
+
+        # Add padding
+        max_dim_padded = 100/90 * max_dim
+        self.irange = (-max_dim_padded, max_dim_padded)
+        self.qrange = (-max_dim_padded, max_dim_padded)
+
+
 
     def calculateMoment(self, p, q):
         """
