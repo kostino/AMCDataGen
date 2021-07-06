@@ -86,7 +86,9 @@ def parse_tfr_element(element):
     # img = tf.reshape(img, shape=img_resolution)
     img = tf.io.decode_png(img, channels=3)
     cumulants = tf.reshape(cumulants, shape=(18, 1))
-    return (img, cumulants, mod, snr)
+    inputs = (img, cumulants)
+    outputs = mod
+    return inputs, outputs
 
 
 def get_dataset(filenames):
