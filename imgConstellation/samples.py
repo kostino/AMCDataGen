@@ -61,14 +61,15 @@ class Samples:
         """
 
         # Use 98th percentile of absolute of each dimension to determine the maximum absolute range
-        x_max = (np.sort(np.abs(self.samples.real)))[0.98 * samples_num - 1]
-        y_max = (np.sort(np.abs(self.samples.imag)))[0.98 * samples_num - 1]
-        max_dim = np.max(x_max, y_max)
+        x_max = (np.sort(np.abs(self.samples.real)))[int(0.98 * samples_num) - 1]
+        y_max = (np.sort(np.abs(self.samples.imag)))[int(0.98 * samples_num) - 1]
+        max_dim = np.max((x_max, y_max))
 
         # Add padding
         max_dim_padded = 100/90 * max_dim
         self.irange = (-max_dim_padded, max_dim_padded)
         self.qrange = (-max_dim_padded, max_dim_padded)
+        self.max_range = max_dim
 
 
 
